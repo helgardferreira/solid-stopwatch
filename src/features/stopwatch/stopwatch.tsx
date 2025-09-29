@@ -1,3 +1,4 @@
+import { maxIndex, minIndex } from 'd3';
 import {
   type Component,
   Match,
@@ -10,6 +11,7 @@ import {
   on,
   onCleanup,
 } from 'solid-js';
+import { createStore, produce } from 'solid-js/store';
 
 import { Button } from '../../components';
 
@@ -24,23 +26,16 @@ import { splitFormat } from './utils';
 // TODO: add data visualizations with d3 later
 // TODO: extract currentSplit state management into separate module (should probably use either context or exported store singleton)
 // TODO: extract logic into separate hook(s)
-// TODO: implement slowest lap and fastest lap highlight
 // TODO: continue here...
 export const Stopwatch: Component = () => {
   const splitFormatter = splitFormat();
 
-  // TODO: maybe refactor this into one store?
-  // ---------------------------------------------------------------------------
   const [currentSplit, setCurrentSplit] = createSignal(0);
-
-  // TODO: refactor this into a store
-  const [laps, setLaps] = createSignal<Lap[]>([]);
-
+  const [laps, setLaps] = createStore<Lap[]>([]);
   const [state, setState] = createSignal(StopwatchState.Idle);
-  // ---------------------------------------------------------------------------
 
   const currentTotal = createMemo(() => {
-    const previousTotal = laps()[0]?.total ?? 0;
+    const previousTotal = laps[0]?.total ?? 0;
     return previousTotal + currentSplit();
   });
 
@@ -48,9 +43,8 @@ export const Stopwatch: Component = () => {
     splitFormatter(currentTotal())
   );
 
-  // TODO: maybe refactor this?
   createEffect(
-    on([state, laps], ([state]) => {
+    on([state, () => laps.length], ([state]) => {
       let requestId: number | undefined;
       const previousSplit = currentSplit();
 
@@ -82,40 +76,52 @@ export const Stopwatch: Component = () => {
     })
   );
 
-  // TODO: maybe refactor this?
-  const handleLapClick = () => {
-    batch(() => {
-      const lapNumber = laps().length + 1;
-      const previousTotal = laps()[0]?.total ?? 0;
-      const split = currentSplit();
-      const total = previousTotal + split;
+  const addLap = (split: number) => {
+    const lapNumber = laps.length + 1;
+    const previousTotal = laps[0]?.total ?? 0;
+    const total = previousTotal + split;
 
-      setCurrentSplit(0);
-      setLaps([{ lapNumber, split, total }, ...laps()]);
-    });
+    setLaps(
+      produce((laps) => {
+        laps.unshift({
+          isFastest: false,
+          isSlowest: false,
+          lapNumber,
+          split,
+          total,
+        });
+
+        if (laps.length >= 2) {
+          const fastestIdx = minIndex(laps, (d) => d.split);
+          const slowestIdx = maxIndex(laps, (d) => d.split);
+
+          laps.forEach((lap, idx) => {
+            lap.isFastest = idx === fastestIdx;
+            lap.isSlowest = idx === slowestIdx;
+          });
+        }
+      })
+    );
   };
 
-  // TODO: maybe refactor this?
-  const handleResetClick = () => {
+  const handleLapClick = () =>
     batch(() => {
+      addLap(currentSplit());
       setCurrentSplit(0);
+    });
+
+  const handleResetClick = () =>
+    batch(() => {
       setLaps([]);
       setState(StopwatchState.Idle);
+      setCurrentSplit(0);
     });
-  };
 
-  // TODO: maybe refactor this?
-  const handleStartClick = () => {
-    setState(StopwatchState.Active);
-  };
+  const handleStartClick = () => setState(StopwatchState.Active);
 
-  // TODO: maybe refactor this?
-  const handleStopClick = () => {
-    setState(StopwatchState.Stopped);
-  };
+  const handleStopClick = () => setState(StopwatchState.Stopped);
 
   return (
-    // TODO: refactor this to use CSS grid and not flex for main layout
     <div class="flex min-h-screen flex-col items-center justify-between p-8">
       <div class="flex w-full flex-col items-center space-y-10">
         <p class="font-mono text-8xl">{formattedCurrentTotal()}</p>
@@ -124,7 +130,7 @@ export const Stopwatch: Component = () => {
           <LapsTable
             currentSplit={currentSplit()}
             currentTotal={currentTotal()}
-            laps={laps()}
+            laps={laps}
           />
         </Show>
       </div>

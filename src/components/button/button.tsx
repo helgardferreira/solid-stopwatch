@@ -9,12 +9,12 @@ export const buttonVariants = cva(
     'aria-invalid:border-red-500',
     'aria-invalid:ring-red-500/20',
     'cursor-pointer',
-    'dark:aria-invalid:ring-red-500/40',
+    'dark:focus-visible:ring-zinc-50/50',
     'disabled:opacity-50',
     'disabled:pointer-events-none',
-    'focus-visible:border-slate-950',
+    'focus-visible:border-zinc-950',
     'focus-visible:ring-[3px]',
-    'focus-visible:ring-slate-950/50',
+    'focus-visible:ring-zinc-950/50',
     'font-medium',
     'gap-2',
     'inline-flex',
@@ -32,16 +32,17 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-slate-950 text-white hover:bg-slate-950/90',
+        default:
+          'bg-zinc-950 text-white hover:bg-zinc-950/90 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-50/90',
         success:
-          'bg-green-500 text-white hover:bg-green-500/90 focus-visible:ring-green-500/20 dark:focus-visible:ring-green-500/40 dark:bg-green-500/60',
+          'bg-green-500 text-white hover:bg-green-500/90 focus-visible:ring-green-500/20',
         destructive:
-          'bg-red-500 text-white hover:bg-red-500/90 focus-visible:ring-red-500/20 dark:focus-visible:ring-red-500/40 dark:bg-red-500/60',
+          'bg-red-500 text-white hover:bg-red-500/90 focus-visible:ring-red-500/20',
         outline:
-          'border bg-slate-50 shadow-xs hover:bg-slate-200 hover:text-slate-800 dark:bg-slate-900/30 dark:border-slate-900 dark:hover:bg-slate-900/50',
+          'border bg-zinc-50 shadow-xs hover:bg-zinc-200 hover:text-zinc-800 dark:bg-zinc-900/30 dark:border-zinc-900 dark:hover:bg-zinc-900/50',
         ghost:
-          'hover:bg-slate-200 hover:text-slate-800 dark:hover:bg-slate-900/50',
-        link: 'text-slate-950 underline-offset-4 hover:underline',
+          'hover:bg-zinc-200 hover:text-zinc-800 dark:hover:bg-zinc-900/50',
+        link: 'text-zinc-950 underline-offset-4 hover:underline',
       },
     },
     defaultVariants: {
@@ -53,8 +54,6 @@ export const buttonVariants = cva(
 export type ButtonProps = ComponentProps<'button'> &
   VariantProps<typeof buttonVariants>;
 
-// TODO: implement variants via `class-variance-authority`
-// TODO: continue here...
 export const Button: Component<ButtonProps> = (props) => {
   const [local, rest] = splitProps(props, ['class', 'variant']);
 

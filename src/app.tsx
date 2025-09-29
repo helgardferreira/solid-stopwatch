@@ -1,142 +1,248 @@
 import { timeFormat } from 'd3';
 import {
   type Component,
-  type ComponentProps,
+  For,
+  Match,
   Show,
+  Switch,
   batch,
   createEffect,
   createMemo,
   createSignal,
+  on,
   onCleanup,
-  splitProps,
 } from 'solid-js';
 
-import { cn } from './utils';
+import { Button } from './components';
 
 // TODO: move this
-//// ---------------------------------------------------------------------------
-export type ButtonProps = ComponentProps<'button'>;
+export enum StopwatchState {
+  Active = 'active',
+  Idle = 'idle',
+  Stopped = 'stopped',
+}
 
-// TODO: implement variants via `class-variance-authority`
-// TODO: continue here...
-export const Button: Component<ButtonProps> = (props) => {
-  const [local, rest] = splitProps(props, ['class']);
-
-  // TODO: implement styling
-  return (
-    <button
-      class={cn(
-        'bg-slate-950',
-        'border',
-        'cursor-pointer',
-        'focus-visible:outline-2',
-        'hover:bg-slate-800',
-        'min-w-38',
-        'outline-offset-1',
-        'rounded-full',
-        'text-white',
-        local.class
-      )}
-      {...rest}
-    />
-  );
+// TODO: move this
+export type Split = {
+  split: number;
+  total: number;
 };
-//// ---------------------------------------------------------------------------
 
+// TODO: reimplement with both XState and RxJS, for finished project, later
+// TODO: reimplement with XState (without RxJS), for learning purposes, later
+// TODO: reimplement with RxJS, for learning purposes, later
+// TODO: add data visualizations with d3 later
 // TODO: extract logic into separate hook(s)
-// TODO: implement the following buttons:
-//       - Lap
-//        - Lap should also be the first "left" button but in a disabled state at first
-//       - Stop
-//       - Reset
-//       - Start
+// TODO: implement slowest lap and fastest lap highlight
+// TODO: implement lap logic
+// TODO: implement splits
 // TODO: continue here...
 const App: Component = () => {
-  const [previousElapsedMs, setPreviousElapsedMs] = createSignal(0);
-  const [elapsedMs, setElapsedMs] = createSignal(0);
-  const [isActive, setIsActive] = createSignal(false);
+  // TODO: maybe refactor this into one store?
+  // ---------------------------------------------------------------------------
+  // TODO: refactor this into a store
+  const [splits, setSplits] = createSignal<Split[]>([]);
+  const [currentSplit, setCurrentSplit] = createSignal(0);
+  const [state, setState] = createSignal(StopwatchState.Idle);
+  // ---------------------------------------------------------------------------
 
   // TODO: implement ms time format similar to Apple "Clock" App
   const timeFormatter = timeFormat('%H:%M:%S.%L');
 
-  const referenceDate = new Date();
-  referenceDate.setHours(0);
-  referenceDate.setMinutes(0);
-  referenceDate.setSeconds(0);
-  referenceDate.setMilliseconds(0);
+  // TODO: refactor this
+  // ---------------------------------------------------------------------------
+  const referenceDate = new Date(0, 0, 0, 0, 0, 0, 0);
+  const splitDate = new Date(0, 0, 0, 0, 0, 0, 0);
+  const totalDate = new Date(0, 0, 0, 0, 0, 0, 0);
+  // ---------------------------------------------------------------------------
 
-  const elapsedDate = new Date();
-  elapsedDate.setHours(0);
-  elapsedDate.setMinutes(0);
-  elapsedDate.setSeconds(0);
-  elapsedDate.setMilliseconds(0);
+  const formattedCurrentSplit = createMemo(() => {
+    splitDate.setTime(referenceDate.getTime() + currentSplit());
 
-  // TODO: implement this
-  const formattedElapsedTime = createMemo(() => {
-    elapsedDate.setTime(referenceDate.getTime() + elapsedMs());
-
-    return timeFormatter(elapsedDate);
+    return timeFormatter(splitDate);
   });
 
-  createEffect(() => {
-    let requestId: number | undefined;
+  const formattedCurrentTotal = createMemo(() => {
+    const previousTotal = splits().at(0)?.total;
 
-    if (isActive()) {
-      let start: number | undefined;
+    if (!previousTotal) {
+      return formattedCurrentSplit();
+    }
 
-      function step(timestamp: number) {
-        if (start === undefined) {
-          start = timestamp;
-        }
+    totalDate.setTime(referenceDate.getTime() + currentSplit() + previousTotal);
 
-        const delta = timestamp - start;
+    return timeFormatter(totalDate);
+  });
 
-        setElapsedMs(delta + previousElapsedMs());
+  const currentLap = () => splits().length + 1;
+
+  createEffect(
+    on([state, splits], ([state]) => {
+      let requestId: number | undefined;
+      const previousSplit = currentSplit();
+
+      if (state === StopwatchState.Active) {
+        let start: number | undefined;
+
+        const step = (highResTimestamp: number) => {
+          const timestamp = Math.floor(highResTimestamp);
+
+          if (start === undefined) {
+            start = timestamp;
+          }
+
+          const delta = timestamp - start;
+
+          setCurrentSplit(delta + previousSplit);
+          requestId = requestAnimationFrame(step);
+        };
+
         requestId = requestAnimationFrame(step);
       }
 
-      requestId = requestAnimationFrame(step);
-    }
+      onCleanup(() => {
+        if (requestId !== undefined) {
+          cancelAnimationFrame(requestId);
+          requestId = undefined;
+        }
+      });
+    })
+  );
 
-    onCleanup(() => {
-      if (requestId !== undefined) {
-        cancelAnimationFrame(requestId);
-        requestId = undefined;
-      }
-    });
-  });
-
-  // TODO: implement this
-  function handleLapClick() {
-    //
-  }
-
-  // TODO: implement this
-  function handleStartClick() {
-    setIsActive(true);
-  }
-
-  // TODO: implement this
-  function handleStopClick() {
+  // TODO: maybe refactor this?
+  const handleLapClick = () => {
     batch(() => {
-      setPreviousElapsedMs(elapsedMs());
-      setIsActive(false);
+      const split = currentSplit();
+      const previousTotal = splits().at(0)?.total ?? 0;
+      const total = previousTotal + split;
+
+      setCurrentSplit(0);
+      setSplits([{ split, total }, ...splits()]);
     });
-  }
+  };
+
+  // TODO: maybe refactor this?
+  const handleResetClick = () => {
+    batch(() => {
+      setCurrentSplit(0);
+      setSplits([]);
+      setState(StopwatchState.Idle);
+    });
+  };
+
+  // TODO: maybe refactor this?
+  const handleStartClick = () => {
+    setState(StopwatchState.Active);
+  };
+
+  // TODO: maybe refactor this?
+  const handleStopClick = () => {
+    setState(StopwatchState.Stopped);
+  };
 
   return (
     <div class="flex min-h-screen flex-col items-center justify-between p-8">
-      <p class="font-mono text-8xl">{formattedElapsedTime()}</p>
+      <p class="font-mono text-8xl">{formattedCurrentTotal()}</p>
 
-      <div class="flex space-x-4">
-        {/* // TODO: leverage `<Show />` or `<Match />` for conditional rendering the various buttons */}
-        <Button onClick={handleLapClick}>Lap</Button>
-        <Show
-          when={isActive()}
-          fallback={<Button onClick={handleStartClick}>Start</Button>}
-        >
-          <Button onClick={handleStopClick}>Stop</Button>
-        </Show>
+      <Show when={state() !== StopwatchState.Idle}>
+        {/* // TODO: move this into separate component */}
+        {/* ////// --------------------------------------------------------- */}
+        {/* // TODO: add maximum height with overflow-y: auto */}
+        <table class="w-full max-w-md table-fixed border-collapse">
+          <thead>
+            <tr class="text-xs *:py-2 *:font-medium *:text-slate-500">
+              <th class="text-start">Lap No.</th>
+              <th class="text-center">Split</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+
+          <tbody class="text-sm *:*:py-1 *:not-last:border-y *:not-last:border-slate-300">
+            {/* // TODO: implement this */}
+            {/* // --------------------------------------------------------- */}
+            <tr>
+              <td class="text-start">Lap {currentLap()}</td>
+              <td class="text-center font-mono">{formattedCurrentSplit()}</td>
+              <td class="text-end font-mono">{formattedCurrentTotal()}</td>
+            </tr>
+            {/* // --------------------------------------------------------- */}
+
+            <For each={splits()}>
+              {/* // TODO: refactor into separate child component */}
+              {/* ////// --------------------------------------------------- */}
+              {({ split, total }, idx) => {
+                console.log('creating split row:', split);
+
+                const getFormattedMs = (ms: number) => {
+                  const referenceDate = new Date();
+                  referenceDate.setHours(0);
+                  referenceDate.setMinutes(0);
+                  referenceDate.setSeconds(0);
+                  referenceDate.setMilliseconds(0);
+
+                  return timeFormatter(new Date(referenceDate.getTime() + ms));
+                };
+
+                const lapNumber = () => splits().length - idx();
+                const formattedSplit = getFormattedMs(split);
+                const formattedTotal = getFormattedMs(total);
+
+                return (
+                  <tr>
+                    <td class="text-start">Lap {lapNumber()}</td>
+                    <td class="text-center font-mono">{formattedSplit}</td>
+                    <td class="text-end font-mono">{formattedTotal}</td>
+                  </tr>
+                );
+              }}
+              {/* ////// --------------------------------------------------- */}
+            </For>
+          </tbody>
+        </table>
+        {/* ////// --------------------------------------------------------- */}
+      </Show>
+
+      <div class="flex space-x-8">
+        <Switch>
+          <Match when={state() === StopwatchState.Active}>
+            <Button class="min-w-38" onClick={handleLapClick}>
+              Lap
+            </Button>
+            <Button
+              class="min-w-38"
+              onClick={handleStopClick}
+              variant="destructive"
+            >
+              Stop
+            </Button>
+          </Match>
+
+          <Match when={state() === StopwatchState.Idle}>
+            <Button class="min-w-38" disabled>
+              Lap
+            </Button>
+            <Button
+              class="min-w-38"
+              onClick={handleStartClick}
+              variant="success"
+            >
+              Start
+            </Button>
+          </Match>
+
+          <Match when={state() === StopwatchState.Stopped}>
+            <Button class="min-w-38" onClick={handleResetClick}>
+              Reset
+            </Button>
+            <Button
+              class="min-w-38"
+              onClick={handleStartClick}
+              variant="success"
+            >
+              Start
+            </Button>
+          </Match>
+        </Switch>
       </div>
     </div>
   );

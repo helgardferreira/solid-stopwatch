@@ -22,7 +22,6 @@
     "verbatimModuleSyntax": true,
 
     /* Linting */
-    "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "noUnusedLocals": false,

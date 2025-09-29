@@ -1,21 +1,11 @@
 import { type Component, For } from 'solid-js';
 
-import type { Lap } from '../types';
+import { useStopwatch } from '../context';
 
 import { LapRow } from './lap-row/lap-row';
 
-type LapsTableProps = {
-  currentSplit: number;
-  currentTotal: number;
-  laps: Lap[];
-};
-
-export const LapsTable: Component<LapsTableProps> = (props) => {
-  const currentLap = (): Lap => ({
-    lapNumber: props.laps.length + 1,
-    split: props.currentSplit,
-    total: props.currentTotal,
-  });
+export const LapsTable: Component = () => {
+  const { currentLap, laps } = useStopwatch();
 
   return (
     <div class="max-h-[60vh] max-w-md overflow-y-auto px-4">
@@ -31,7 +21,7 @@ export const LapsTable: Component<LapsTableProps> = (props) => {
         <tbody class="text-sm *:*:py-1 *:not-last:border-y *:not-last:border-zinc-300 dark:*:not-last:border-zinc-700">
           <LapRow lap={currentLap()} />
 
-          <For each={props.laps}>{(lap) => <LapRow lap={lap} />}</For>
+          <For each={laps}>{(lap) => <LapRow lap={lap} />}</For>
         </tbody>
       </table>
     </div>

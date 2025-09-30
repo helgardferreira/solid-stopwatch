@@ -17,6 +17,7 @@ export const buttonVariants = cva(
     'focus-visible:ring-zinc-950/50',
     'font-medium',
     'gap-2',
+    'h-fit',
     'inline-flex',
     'items-center',
     'justify-center',

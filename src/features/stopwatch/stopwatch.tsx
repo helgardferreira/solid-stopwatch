@@ -5,10 +5,6 @@ import { LapsTable } from './laps-table/laps-table';
 import { StopwatchControls } from './stopwatch-controls/stopwatch-controls';
 import { splitFormat } from './utils';
 
-// TODO: add data visualizations with d3 later
-// TODO: reimplement with both XState and RxJS, for finished project, later
-// TODO: reimplement with XState (without RxJS), for learning purposes, later
-// TODO: reimplement with RxJS, for learning purposes, later
 export const Stopwatch: Component = () => {
   const { currentTotal } = useStopwatch();
 

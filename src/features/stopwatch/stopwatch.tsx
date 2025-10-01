@@ -5,6 +5,9 @@ import { useStopwatch } from './state';
 import { StopwatchControls } from './stopwatch-controls/stopwatch-controls';
 import { splitFormat } from './utils';
 
+// TODO: add data visualizations with d3 later
+// TODO: reimplement with both XState and RxJS for finished project
+// TODO: continue here...
 export const Stopwatch: Component = () => {
   const { currentTotal } = useStopwatch();
 

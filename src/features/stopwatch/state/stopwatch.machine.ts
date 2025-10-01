@@ -1,74 +1,16 @@
-import { maxIndex, minIndex } from 'd3';
-import { type ActorRefFrom, type SnapshotFrom, assign, setup } from 'xstate';
+import type { ActorRefFrom, SnapshotFrom } from 'xstate';
 
-import type { Lap } from '../types';
+import { addLap, reset, updateSplit } from './actions';
+import { stopwatchMachineSetup } from './stopwatch.machine.setup';
 
-import { currentSplitLogic } from './actors';
-import type { StopwatchActorContext, StopwatchActorEvent } from './types';
+export enum StopwatchState {
+  Active = 'Active',
+  Idle = 'Idle',
+  Stopped = 'Stopped',
+}
 
-// TODO: refactor with new XState modular API
-//       - try out new `setup`-bound createStateConfig
-//       - try out new `setup`-bound createAction
-//       - try out new `setup`-bound built-in actions; including:
-//         - `spawnChild`
-//         - `stopChild`
-//         - etc.
-// TODO: replace current `solid-js`-only state implementation with state machine
-// TODO: implement this
-// TODO: continue here...
-export const stopwatchMachine = setup({
-  types: {
-    context: {} as StopwatchActorContext,
-    events: {} as StopwatchActorEvent,
-  },
-  // TODO: refactor this
-  actions: {
-    addLap: assign(
-      (_, { currentSplit, laps }: { currentSplit: number; laps: Lap[] }) => {
-        const lapNumber = laps.length + 1;
-        const previousTotal = laps[0]?.total ?? 0;
-        const total = previousTotal + currentSplit;
-
-        let newLaps: Lap[] = [
-          {
-            isFastest: false,
-            isSlowest: false,
-            lapNumber,
-            split: currentSplit,
-            total,
-          },
-          ...laps,
-        ];
-
-        if (newLaps.length >= 2) {
-          const fastestIdx = minIndex(newLaps, (d) => d.split);
-          const slowestIdx = maxIndex(newLaps, (d) => d.split);
-
-          newLaps = newLaps.map((lap, idx) => {
-            return {
-              ...lap,
-              isFastest: idx === fastestIdx,
-              isSlowest: idx === slowestIdx,
-            };
-          });
-        }
-
-        return {
-          currentSplit: 0,
-          laps: newLaps,
-        };
-      }
-    ),
-    reset: assign({ currentSplit: 0, laps: [] }),
-    updateSplit: assign((_, { elapsed }: { elapsed: number }) => ({
-      currentSplit: elapsed,
-    })),
-  },
-  actors: {
-    currentSplitLogic,
-  },
-}).createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5SwC4HsAOB3AhigxgBYB0AkhADZgDEqOATigNoAMAuoqBmrAJYq80AO04gAHogDMAFgCsxABzSA7ADYATJIUBOBZICMC1QBoQAT0TqW+4ssmzVC2ev0tJ22Qv0Bfb6dSYuAQkAIL4AgBuNAEYrBxIINx8AsKiEggyCsT6ngrqyuq6qqoqphYIXsSS6oX62qo5yvoFyr7+6Nh4RMRhkTQArhgQeGAA+rAYFPxxokn8giIJ6bLutrLKLMpO9YVNZYh1NrIeLHn6Bu4N0m0gMUHdvbxR1BQ4seyzPPOpS4gOqmt1hp9NISuodPsEPUqlZ7CwPKp3E1VDc7l0SABlDoYSC0FAMZgfBJzFKLUDpfQaYiyFaSOwKIzSbRqSHVdTZaRKWSnFjc5TSa5+W4de6Y7G4+hwMCE+JcL6ktIHKk0yR0rSM5kmcyWay2eyOZyudyeHw3IRoCBwURo4KfZILRUIAC0WvKLtRIvRZEoYDt3zJ4ksVMMCi2alqan0kKsNm0blUdma9n06kF7UCXseUT9Ct+CDk7K8dNUNI0Ojysmj2hsRl050kLERHhBHozwWIWMwOIgOYdeek6khdW0xGk8cTdlkKcFviAA */
+export const stopwatchMachine = stopwatchMachineSetup.createMachine({
+  /** @xstate-layout N4IgpgJg5mDOIC5SwC4HsAOB3AhigxgBYB0AgvigJYBuYAxADY4YDaADALqKgZqyVU0AO24gAHogCsAdgCMxACwBmAGwAOJdOkAmFdICcagDQgAnom2yFxJbP0rJK7W0lt9hgL4eTqTLgIk5FS0dL6snKK8-IIiSOKISpL6ikoKavra0hoqsgYm5ghq8kra2ulsmYmyzkpePujYeERkFDT0AK4YEHhgAPqwGAwC7FxxUQKUwqISCJKS8tXKmjIZagrS+YiydsRsCmlqriUqqZp1IGH+zQCSEAz0qDgATigjkXwTU3EzidLE1ZpZJIFEC2LlJJsEKVrAoVGwlGw3GwivDVOdLk0SABlBoYSB0J5wMCvCJjD4xaZbJzEOZKJRrZHSBQySHOeTSRIODL0jkqdENK7Y3H4x4vN5k6KTWKgGayam0+kKRnMjZmBL7YhqDlg-RaFQ5MFebwgIRoCBwUQYgLvSVfGWIAC0KkhTt2iPdHvdVn5fkxLWCYBtn2l8QQsOsyMMCPSev0cshtmsSWUHIUmW0wIzPsaAWIt3uQYp3wsHMUKjS6jUezSclZ2msTjUGYqJTcVdqxqtzRxmDxEELUspYe0de0-zKze0rcM8KNHiAA */
   id: 'stopwatch',
   context: {
     currentSplit: 0,
@@ -76,12 +18,7 @@ export const stopwatchMachine = setup({
   },
   initial: 'Idle',
   states: {
-    Idle: {
-      on: {
-        start: 'Active',
-      },
-    },
-    Active: {
+    [StopwatchState.Active]: {
       invoke: {
         id: 'currentSplit',
         input: ({ context }) => ({ previousSplit: context.currentSplit }),
@@ -89,33 +26,22 @@ export const stopwatchMachine = setup({
       },
 
       on: {
-        stop: 'Stopped',
-        update_split: {
-          actions: {
-            params: ({ event }) => ({ elapsed: event.elapsed }),
-            type: 'updateSplit',
-          },
-        },
         lap: {
-          actions: {
-            params: ({ context }) => ({
-              currentSplit: context.currentSplit,
-              laps: context.laps,
-            }),
-            type: 'addLap',
-          },
+          actions: addLap,
           reenter: true,
           target: 'Active',
         },
+        stop: 'Stopped',
+        update_split: { actions: updateSplit },
       },
     },
-    Stopped: {
+    [StopwatchState.Idle]: {
+      on: { start: 'Active' },
+    },
+    [StopwatchState.Stopped]: {
       on: {
+        reset: { actions: reset, target: 'Idle' },
         start: 'Active',
-        reset: {
-          actions: 'reset',
-          target: 'Idle',
-        },
       },
     },
   },

@@ -1,4 +1,8 @@
-import { type CallbackLogicFunction, fromCallback } from 'xstate';
+import {
+  type ActorRefFrom,
+  type CallbackLogicFunction,
+  fromCallback,
+} from 'xstate';
 
 import type { LapEvent, StopwatchActorEvent } from '../types';
 
@@ -38,3 +42,5 @@ const currentSplitCallback: CallbackLogicFunction<
 };
 
 export const currentSplitLogic = fromCallback(currentSplitCallback);
+
+export type CurrentSplitActorRef = ActorRefFrom<typeof currentSplitLogic>;

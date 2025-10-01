@@ -1,7 +1,7 @@
 import { type Component, Match, Switch } from 'solid-js';
 
 import { Button } from '../../../components';
-import { useStopwatch } from '../state';
+import { StopwatchState, useStopwatch } from '../state';
 
 export const StopwatchControls: Component = () => {
   const { lap, reset, snapshot, start, stop } = useStopwatch();
@@ -9,7 +9,7 @@ export const StopwatchControls: Component = () => {
   return (
     <div class="flex space-x-8">
       <Switch fallback={null}>
-        <Match when={snapshot.matches('Active')}>
+        <Match when={snapshot.matches(StopwatchState.Active)}>
           <Button class="min-w-38" onClick={lap}>
             Lap
           </Button>
@@ -18,7 +18,7 @@ export const StopwatchControls: Component = () => {
           </Button>
         </Match>
 
-        <Match when={snapshot.matches('Idle')}>
+        <Match when={snapshot.matches(StopwatchState.Idle)}>
           <Button class="min-w-38" disabled>
             Lap
           </Button>
@@ -27,7 +27,7 @@ export const StopwatchControls: Component = () => {
           </Button>
         </Match>
 
-        <Match when={snapshot.matches('Stopped')}>
+        <Match when={snapshot.matches(StopwatchState.Stopped)}>
           <Button class="min-w-38" onClick={reset}>
             Reset
           </Button>

@@ -1,15 +1,14 @@
 import { type Component, For, Show } from 'solid-js';
 
-import { StopwatchState } from '../constants';
-import { useStopwatch } from '../context';
+import { StopwatchState, useStopwatch } from '../state';
 
 import { LapRow } from './lap-row/lap-row';
 
 export const LapsTable: Component = () => {
-  const { currentLap, laps, state } = useStopwatch();
+  const { currentLap, laps, snapshot } = useStopwatch();
 
   return (
-    <Show when={state() !== StopwatchState.Idle} fallback={<div />}>
+    <Show when={!snapshot.matches(StopwatchState.Idle)} fallback={<div />}>
       <div class="h-full max-w-md overflow-y-auto px-4">
         <table class="w-full table-fixed border-collapse">
           <thead>

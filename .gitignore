@@ -12,9 +12,6 @@ app.config.timestamp_*.js
 .env
 .env*.local
 
-# dependencies
-/node_modules
-
 # IDEs and editors
 /.idea
 .project
@@ -28,3 +25,11 @@ gitignore
 # System Files
 .DS_Store
 Thumbs.db
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

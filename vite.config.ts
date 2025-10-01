@@ -22,12 +22,13 @@ const vitestConfig = defineVitestConfig({
     'process.env.STL_SKIP_AUTO_CLEANUP': 'false',
   },
   test: {
-    globals: true,
-    environment: 'jsdom',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
     },
+    environment: 'jsdom',
+    exclude: ['e2e'],
+    globals: true,
   },
 });
 

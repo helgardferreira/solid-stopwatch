@@ -1,4 +1,3 @@
-import { Observable, map } from 'rxjs';
 import {
   type Component,
   Show,
@@ -9,6 +8,7 @@ import {
 } from 'solid-js';
 
 import { Button } from '../../components';
+import { useContentResize } from '../../utils';
 
 import { LapsTable } from './laps-table/laps-table';
 import { useStopwatch } from './state';
@@ -110,85 +110,36 @@ export const Sparkline: Component = () => {
   // TODO: create dimensions$ Observable (or Observable factory) that leverages `ResizeObserver` and a HTMLElement `ref`
   // ...
 
-  const [setRef, contentRect] = useContentResize();
-
-  const contentRectDebugText = () => {
-    return JSON.stringify(contentRect(), null, 2);
-  };
+  const [setRef] = useChartDimensions();
 
   return (
     // TODO: figure out chart canvas wrapper styling
     <div class="h-full w-full bg-red-100" ref={setRef}>
-      <pre>{contentRectDebugText()}</pre>
+      Coming soon...
     </div>
   );
 };
 //// ---------------------------------------------------------------------------
 
-// TODO: move this
+// TODO: move this to `src/features/stopwatch/utils`
 //// ---------------------------------------------------------------------------
-// TODO: document this
-// TODO: implement hook options argument with:
-//       - optional debounce / throttle config
-//       - optional onResize event listener
-// TODO: add explicity type signature
-// TODO: refactor this
 // TODO: implement this
-// TODO: continue here...
-export const useContentResize = () => {
-  const [ref, setRef] = createSignal<HTMLDivElement>();
+export function useChartDimensions() {
+  const [setRef, _, contentRect$] = useContentResize();
 
-  // TODO: refactor this by replacing this with `from` (from solid-js) to convert `contentRect$` into a signal
-  const [contentRect, setContentRect] = createSignal<DOMRectReadOnly>();
-
+  // TODO: remove this after debugging
   createEffect(() => {
-    // TODO: remove this after debugging
-    console.log('running sparkline effect');
-    const element = ref();
+    console.log('subscribing to contentRect$');
 
-    if (!element) {
-      return;
-    }
-
-    // TODO: remove this after debugging
-    console.log('element', element);
-
-    const resize = fromResize(element);
-
-    const contentRect$ = resize.pipe(map((entries) => entries[0].contentRect));
-
-    const sub = contentRect$.subscribe((contentRect) => {
-      setContentRect(contentRect);
+    contentRect$.subscribe((contentRect) => {
+      console.log({ contentRect });
     });
 
     onCleanup(() => {
-      // TODO: remove this after debugging
-      console.log('ResizeObserver effect cleanup');
-
-      sub.unsubscribe();
+      console.log('disposing contentRect$ subscription');
     });
   });
 
-  return [setRef, contentRect] as const;
-};
-//// ---------------------------------------------------------------------------
-
-// TODO: move this
-//// ---------------------------------------------------------------------------
-// TODO: document this
-// TODO: maybe add reference to `ResizeObserver` to Observable datastream (via `ResizeObserverCallback`)?
-export const fromResize = (
-  target: Element,
-  options?: ResizeObserverOptions
-): Observable<ResizeObserverEntry[]> => {
-  return new Observable<ResizeObserverEntry[]>((subscriber) => {
-    const resizeObserver = new ResizeObserver((entries) =>
-      subscriber.next(entries)
-    );
-
-    resizeObserver.observe(target, options);
-
-    return () => resizeObserver.disconnect();
-  });
-};
+  return [setRef] as const;
+}
 //// ---------------------------------------------------------------------------

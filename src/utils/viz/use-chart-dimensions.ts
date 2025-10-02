@@ -20,9 +20,9 @@ type UseChartDimensionsResult<T extends Element> = [
 ];
 
 // TODO: document this
-export function useChartDimensions<T extends Element>(
+export const useChartDimensions = <T extends Element>(
   options: UseChartDimensionsOptions = {}
-): UseChartDimensionsResult<T> {
+): UseChartDimensionsResult<T> => {
   const [setRef, _, contentRect$] = useContentResize<T>();
 
   const dimensions$ = contentRect$.pipe(
@@ -47,4 +47,4 @@ export function useChartDimensions<T extends Element>(
   );
 
   return [setRef, dimensions, dimensions$];
-}
+};

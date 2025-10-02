@@ -4,11 +4,10 @@ import {
   createEffect,
   createMemo,
   createSignal,
-  onCleanup,
 } from 'solid-js';
 
 import { Button } from '../../components';
-import { useContentResize } from '../../utils';
+import { useChartDimensions } from '../../utils';
 
 import { LapsTable } from './laps-table/laps-table';
 import { useStopwatch } from './state';
@@ -110,36 +109,19 @@ export const Sparkline: Component = () => {
   // TODO: create dimensions$ Observable (or Observable factory) that leverages `ResizeObserver` and a HTMLElement `ref`
   // ...
 
-  const [setRef] = useChartDimensions();
+  const [setRef, dimensions] = useChartDimensions({
+    margin: { bottom: 40, left: 75, right: 30, top: 40 },
+  });
+
+  createEffect(() => {
+    console.log('dimensions', dimensions());
+  });
 
   return (
     // TODO: figure out chart canvas wrapper styling
-    <div class="h-full w-full bg-red-100" ref={setRef}>
+    <div class="h-full w-full bg-red-800" ref={setRef}>
       Coming soon...
     </div>
   );
 };
-//// ---------------------------------------------------------------------------
-
-// TODO: move this to `src/features/stopwatch/utils`
-//// ---------------------------------------------------------------------------
-// TODO: implement this
-export function useChartDimensions() {
-  const [setRef, _, contentRect$] = useContentResize();
-
-  // TODO: remove this after debugging
-  createEffect(() => {
-    console.log('subscribing to contentRect$');
-
-    contentRect$.subscribe((contentRect) => {
-      console.log({ contentRect });
-    });
-
-    onCleanup(() => {
-      console.log('disposing contentRect$ subscription');
-    });
-  });
-
-  return [setRef] as const;
-}
 //// ---------------------------------------------------------------------------

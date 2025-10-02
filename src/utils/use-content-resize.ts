@@ -16,13 +16,9 @@ import {
 
 import { fromResize } from './observables';
 
-export interface ContentRectChangeCallback {
-  (contentRect: DOMRectReadOnly, observer: ResizeObserver): void;
-}
-
 type UseContentResizeResultOptions = {
   onResize?: ResizeObserverCallback;
-  onChange?: ContentRectChangeCallback;
+  onChange?: (contentRect: DOMRectReadOnly, observer: ResizeObserver) => void;
 };
 
 type UseContentResizeResult<T extends Element> = [

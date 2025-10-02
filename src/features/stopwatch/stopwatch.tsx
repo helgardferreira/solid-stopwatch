@@ -1,4 +1,14 @@
-import { type Component, createMemo } from 'solid-js';
+import { Observable, map } from 'rxjs';
+import {
+  type Component,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+} from 'solid-js';
+
+import { Button } from '../../components';
 
 import { LapsTable } from './laps-table/laps-table';
 import { useStopwatch } from './state';
@@ -27,7 +37,6 @@ import { splitFormat } from './utils';
 //       - Control chart (mean + ±1/2/3σ bands)
 //       - KDE density curve of lap durations
 //       - “Lag-1” Poincaré plot (lap n vs lap n+1)
-// TODO: continue here...
 export const Stopwatch: Component = () => {
   const { currentTotal } = useStopwatch();
 
@@ -37,26 +46,24 @@ export const Stopwatch: Component = () => {
     splitFormatter(currentTotal())
   );
 
-  // TODO: remove this after debugging
-  /*
-  return (
-    <div class="grid h-screen grid-rows-[6rem_1fr_1.75rem] place-items-center gap-y-12 p-8">
-      <p class="font-mono text-8xl">{formattedCurrentTotal()}</p>
+  // TODO: remove this after debugging potential memory leaks
+  // ---------------------------------------------------------------------------
+  const [showSparkline, setShowSparkline] = createSignal(true);
 
-      <LapsTable />
+  const sparklineToggleText = () =>
+    showSparkline() ? 'Hide Sparkline' : 'Show Sparkline';
 
-      <StopwatchControls />
-    </div>
-  );
-  */
+  const toggleSparkline = () => {
+    setShowSparkline((showSparkline) => !showSparkline);
+  };
+  // ---------------------------------------------------------------------------
 
   // TODO: figure out "good enough" UI/UX for displaying charts
   //       - adjust grid template columns while implementing charts (especially if responsive charts is too complex)
   //       - add ability collapse / expand charts section
   return (
     <div class="grid h-screen w-full grid-cols-1 gap-4 p-3 md:grid-cols-2 lg:grid-cols-[3fr_2fr] lg:p-8 xl:grid-cols-[2fr_1fr]">
-      {/* // TODO: restore this after debugging */}
-      {/* <div class="grid h-full w-full grid-rows-[6rem_1fr_1.75rem] place-items-center gap-y-12 overflow-hidden"> */}
+      {/* // TODO: remove debug border after debugging */}
       <div class="grid h-full w-full grid-rows-[6rem_1fr_1.75rem] place-items-center gap-y-12 overflow-hidden rounded-md border">
         <p class="font-mono text-4xl sm:text-7xl md:text-5xl lg:text-7xl xl:text-8xl">
           {formattedCurrentTotal()}
@@ -67,10 +74,16 @@ export const Stopwatch: Component = () => {
         <StopwatchControls />
       </div>
 
-      {/* // TODO: restore this after debugging */}
-      {/* <div class="h-full w-full"> */}
-      <div class="h-full w-full rounded-md border">
-        <Sparkline />
+      {/* // TODO: remove debug border after debugging */}
+      <div class="grid h-full w-full grid-rows-2 overflow-x-hidden overflow-y-auto rounded-md border p-4">
+        {/* // TODO: remove this after debugging potential memory leaks */}
+        <Button class="w-fit" onClick={toggleSparkline}>
+          {sparklineToggleText()}
+        </Button>
+
+        <Show when={showSparkline()} fallback={null}>
+          <Sparkline />
+        </Show>
       </div>
     </div>
   );
@@ -78,6 +91,7 @@ export const Stopwatch: Component = () => {
 
 // TODO: move this
 //// ---------------------------------------------------------------------------
+// TODO: refactor this out into separate components and utilities (e.g. axis, canvas, get responsive chart dimensions, etc.)
 // TODO: implement this
 // TODO: continue here...
 export const Sparkline: Component = () => {
@@ -93,6 +107,88 @@ export const Sparkline: Component = () => {
    * Set up interactions
    */
 
-  return <div>Coming soon...</div>;
+  // TODO: create dimensions$ Observable (or Observable factory) that leverages `ResizeObserver` and a HTMLElement `ref`
+  // ...
+
+  const [setRef, contentRect] = useContentResize();
+
+  const contentRectDebugText = () => {
+    return JSON.stringify(contentRect(), null, 2);
+  };
+
+  return (
+    // TODO: figure out chart canvas wrapper styling
+    <div class="h-full w-full bg-red-100" ref={setRef}>
+      <pre>{contentRectDebugText()}</pre>
+    </div>
+  );
+};
+//// ---------------------------------------------------------------------------
+
+// TODO: move this
+//// ---------------------------------------------------------------------------
+// TODO: document this
+// TODO: implement hook options argument with:
+//       - optional debounce / throttle config
+//       - optional onResize event listener
+// TODO: add explicity type signature
+// TODO: refactor this
+// TODO: implement this
+// TODO: continue here...
+export const useContentResize = () => {
+  const [ref, setRef] = createSignal<HTMLDivElement>();
+
+  // TODO: refactor this by replacing this with `from` (from solid-js) to convert `contentRect$` into a signal
+  const [contentRect, setContentRect] = createSignal<DOMRectReadOnly>();
+
+  createEffect(() => {
+    // TODO: remove this after debugging
+    console.log('running sparkline effect');
+    const element = ref();
+
+    if (!element) {
+      return;
+    }
+
+    // TODO: remove this after debugging
+    console.log('element', element);
+
+    const resize = fromResize(element);
+
+    const contentRect$ = resize.pipe(map((entries) => entries[0].contentRect));
+
+    const sub = contentRect$.subscribe((contentRect) => {
+      setContentRect(contentRect);
+    });
+
+    onCleanup(() => {
+      // TODO: remove this after debugging
+      console.log('ResizeObserver effect cleanup');
+
+      sub.unsubscribe();
+    });
+  });
+
+  return [setRef, contentRect] as const;
+};
+//// ---------------------------------------------------------------------------
+
+// TODO: move this
+//// ---------------------------------------------------------------------------
+// TODO: document this
+// TODO: maybe add reference to `ResizeObserver` to Observable datastream (via `ResizeObserverCallback`)?
+export const fromResize = (
+  target: Element,
+  options?: ResizeObserverOptions
+): Observable<ResizeObserverEntry[]> => {
+  return new Observable<ResizeObserverEntry[]>((subscriber) => {
+    const resizeObserver = new ResizeObserver((entries) =>
+      subscriber.next(entries)
+    );
+
+    resizeObserver.observe(target, options);
+
+    return () => resizeObserver.disconnect();
+  });
 };
 //// ---------------------------------------------------------------------------

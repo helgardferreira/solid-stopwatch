@@ -1,22 +1,42 @@
-import { type Bin, bin, max, range, scaleLinear } from 'd3';
+import { bin, max, range, scaleLinear } from 'd3';
 import { type Component, For, createMemo } from 'solid-js';
 
+import { Axis } from '../../../components';
 import { useChartDimensions } from '../../../utils';
 import { useStopwatch } from '../state';
 import type { Lap } from '../types';
-import { useScale } from '../utils';
+import { splitFormat, useScale } from '../utils';
+
+import { LapsBin } from './laps-bin';
+import { xAccessor } from './x-accessor';
+import { yAccessor } from './y-accessor';
 
 export const LapsHistogram: Component = () => {
   const { laps } = useStopwatch();
 
-  const xAccessor = (d: Lap): number => d.split;
-  const yAccessor = (d: Bin<Lap, number>): number => d.length;
+  const barGutter = 1;
+
+  const hasLapWithHours = createMemo(() =>
+    laps.some(({ split }) => Math.floor(split / (1000 * 60 * 60)) % 24 !== 0)
+  );
+
+  const hasLapWithMinutes = createMemo(() =>
+    laps.some(({ split }) => Math.floor(split / (1000 * 60)) % 60 !== 0)
+  );
 
   const [setRef, dimensions] = useChartDimensions({
-    margin: { bottom: 45, left: 15, right: 15, top: 15 },
+    margin: { bottom: 45, left: 60, right: 60, top: 30 },
   });
 
-  const barGutter = 10;
+  const binCount = createMemo(() => {
+    const isNarrow = dimensions().boundedWidth < 550;
+
+    if (isNarrow) {
+      return hasLapWithHours() ? 2 : hasLapWithMinutes() ? 3 : 4;
+    }
+
+    return hasLapWithHours() || hasLapWithMinutes() ? 5 : 6;
+  });
 
   const xScale = useScale({
     accessor: xAccessor,
@@ -26,32 +46,34 @@ export const LapsHistogram: Component = () => {
   });
 
   const xThresholds = createMemo(() => {
-    // TODO: make `binCount` dynamic based on `dimensions().boundedWidth`
-    const binCount = 4;
     const domain = xScale().domain();
     const [min, max] = domain;
 
-    return range(min, max, (max - min) / binCount);
+    return range(min, max, (max - min) / binCount());
   });
 
-  const bins = createMemo(() => {
-    const niceXDomain = xScale().domain() as
+  const xDomain = createMemo(() => {
+    const xDomain = xScale().domain() as
       | [number, number]
       | [undefined, undefined];
 
-    if (niceXDomain[0] === undefined || niceXDomain[1] === undefined) {
+    if (xDomain[0] === undefined || xDomain[1] === undefined) {
       throw new Error('Invalid X Domain');
     }
 
+    return xDomain;
+  });
+
+  const bins = createMemo(() => {
     const binsGenerator = bin<Lap, number>()
-      .domain(niceXDomain)
+      .domain(xDomain())
       .value(xAccessor)
       .thresholds(xThresholds());
 
     return binsGenerator(laps);
   });
 
-  const yScale = () => {
+  const yScale = createMemo(() => {
     const maxBinSize = max(bins(), yAccessor);
 
     if (maxBinSize === undefined) {
@@ -62,11 +84,11 @@ export const LapsHistogram: Component = () => {
       .domain([0, maxBinSize])
       .range([dimensions().boundedHeight, 0])
       .nice();
-  };
+  });
 
-  const leftScaledAccessor = (d: Bin<Lap, number>) => xScale()(d.x0 ?? 0);
-  const rightScaledAccessor = (d: Bin<Lap, number>) => xScale()(d.x1 ?? 0);
-  const yAccessorScaled = (d: Bin<Lap, number>) => yScale()(yAccessor(d));
+  const splitFormatter = splitFormat({ short: true });
+
+  const axisTicks = () => xThresholds().concat(xDomain()[1]);
 
   return (
     <div
@@ -80,35 +102,26 @@ export const LapsHistogram: Component = () => {
         >
           <g id="bins">
             <For each={bins()}>
-              {/* // TODO: move to separate `<Bin />` component  */}
-              {(d) => {
-                const height = () =>
-                  dimensions().boundedHeight - yAccessorScaled(d);
-
-                const width = () =>
-                  max([
-                    0,
-                    rightScaledAccessor(d) - leftScaledAccessor(d) - barGutter,
-                  ]) ?? 0;
-
-                const x = () => leftScaledAccessor(d) + barGutter / 2;
-                const y = () => yAccessorScaled(d);
-
-                // TODO: implement bin labels
-                return (
-                  <g class="bin">
-                    <rect
-                      class="fill-blue-500"
-                      height={height()}
-                      width={width()}
-                      x={x()}
-                      y={y()}
-                    />
-                  </g>
-                );
-              }}
+              {(bin) => (
+                <LapsBin
+                  bin={bin}
+                  barGutter={barGutter}
+                  dimensions={dimensions()}
+                  xScale={xScale()}
+                  yScale={yScale()}
+                />
+              )}
             </For>
           </g>
+
+          <Axis
+            axis="x"
+            dimensions={dimensions()}
+            scale={xScale()}
+            ticks={axisTicks()}
+            formatTick={splitFormatter}
+            label="Splits"
+          />
         </g>
       </svg>
     </div>

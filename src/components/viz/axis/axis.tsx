@@ -16,6 +16,7 @@ type AxisProps<
   formatTick?: (tick: ReturnType<Scale['ticks']>[number]) => number | string;
   label?: string;
   scale: Scale;
+  ticks?: number[];
 };
 
 export function Axis<

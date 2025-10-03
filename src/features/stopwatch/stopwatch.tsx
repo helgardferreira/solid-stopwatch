@@ -9,9 +9,6 @@ import { useStopwatch } from './state';
 import { StopwatchControls } from './stopwatch-controls/stopwatch-controls';
 import { splitFormat } from './utils';
 
-// TODO: implement laps pie chart
-// TODO: implement Histogram chart of lap durations
-// TODO: continue here...
 export const Stopwatch: Component = () => {
   const { currentTotal, laps } = useStopwatch();
 
@@ -41,7 +38,6 @@ export const Stopwatch: Component = () => {
       </div>
 
       <Show when={showDataViz()}>
-        {/* // TODO: update grid-template-rows to cater for three charts (sparkline, histogram, pie) */}
         <div class="grid h-full w-full grid-rows-2 gap-4 overflow-x-hidden overflow-y-auto p-4">
           <LapsSparkline />
 

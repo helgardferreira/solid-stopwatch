@@ -19,10 +19,9 @@ type AxisVerticalProps<
   formatTick?: (tick: ReturnType<Scale['ticks']>[number]) => number | string;
   label?: string;
   scale: Scale;
+  ticks?: number[];
 };
 
-// TODO: make tick, label, and line styling configurable (maybe through cva variants?)
-// TODO: make number of ticks configurable
 export function AxisVertical<
   Range,
   Output,
@@ -34,11 +33,14 @@ export function AxisVertical<
     'formatTick',
     'label',
     'scale',
+    'ticks',
   ]);
 
   const numberOfTicks = createMemo(() => local.dimensions.boundedHeight / 70);
 
-  const ticks = createMemo(() => local.scale.ticks(numberOfTicks()));
+  const ticks = createMemo(
+    () => local.ticks ?? local.scale.ticks(numberOfTicks())
+  );
 
   return (
     <g {...rest}>

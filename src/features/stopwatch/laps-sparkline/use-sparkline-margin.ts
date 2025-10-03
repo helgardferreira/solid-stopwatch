@@ -17,7 +17,7 @@ export const useSparklineMargin = () => {
   const margin = createMemo<ChartMargin>(() => ({
     bottom: 45,
     left: hasLapWithHours() ? 130 : hasLapWithMinutes() ? 110 : 90,
-    right: 15,
+    right: 20,
     top: 15,
   }));
 

@@ -19,10 +19,9 @@ type AxisHorizontalProps<
   formatTick?: (tick: ReturnType<Scale['ticks']>[number]) => number | string;
   label?: string;
   scale: Scale;
+  ticks?: number[];
 };
 
-// TODO: make tick, label, and line styling configurable (maybe through cva variants?)
-// TODO: make number of ticks configurable
 export function AxisHorizontal<
   Range,
   Output,
@@ -34,15 +33,18 @@ export function AxisHorizontal<
     'formatTick',
     'label',
     'scale',
+    'ticks',
   ]);
 
   const numberOfTicks = createMemo(() =>
-    local.dimensions.boundedWidth < 600
+    local.dimensions.boundedWidth < 550
       ? local.dimensions.boundedWidth / 100
       : local.dimensions.boundedWidth / 250
   );
 
-  const ticks = createMemo(() => local.scale.ticks(numberOfTicks()));
+  const ticks = createMemo(
+    () => local.ticks ?? local.scale.ticks(numberOfTicks())
+  );
 
   return (
     <g transform={`translate(0, ${local.dimensions.boundedHeight})`} {...rest}>

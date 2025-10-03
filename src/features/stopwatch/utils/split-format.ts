@@ -15,7 +15,7 @@ export const splitFormat = ({
   });
 
   return (splitMs: number) => {
-    const milliseconds = splitMs % 1_000;
+    const milliseconds = Math.floor(splitMs) % 1_000;
     const seconds = Math.floor(splitMs / 1_000) % 60;
     const minutes = Math.floor(splitMs / (1_000 * 60)) % 60;
     const hours = Math.floor(splitMs / (1_000 * 60 * 60)) % 24;

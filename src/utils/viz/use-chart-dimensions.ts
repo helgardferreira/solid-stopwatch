@@ -1,17 +1,31 @@
-import isEqual from 'lodash/isEqual';
-import { type Observable, distinctUntilChanged, map } from 'rxjs';
-import { type Accessor, type Setter, from as fromRx } from 'solid-js';
+import { isEqual } from 'lodash';
+import {
+  type Observable,
+  combineLatestWith,
+  distinctUntilChanged,
+  from as fromSolid,
+  map,
+} from 'rxjs';
+import {
+  type Accessor,
+  type Setter,
+  createMemo,
+  from as fromRx,
+  observable,
+} from 'solid-js';
 
+import type { DeepAccessor } from '../../types';
+import { accessDeep } from '../signals';
 import { useContentResize } from '../use-content-resize';
 
 import { computeChartDimensions } from './compute-chart-dimensions';
 import type { ChartDimensions, ChartMargin } from './types';
 
-type UseChartDimensionsOptions = {
+type UseChartDimensionsOptions = DeepAccessor<{
   height?: number;
   margin?: Partial<ChartMargin>;
   width?: number;
-};
+}>;
 
 type UseChartDimensionsResult<T extends Element> = [
   setRef: Setter<T | undefined>,
@@ -25,8 +39,13 @@ export const useChartDimensions = <T extends Element>(
 ): UseChartDimensionsResult<T> => {
   const [setRef, _, contentRect$] = useContentResize<T>();
 
+  const optionsAccessor = createMemo(() => accessDeep(options));
+
+  const options$ = fromSolid(observable(optionsAccessor));
+
   const dimensions$ = contentRect$.pipe(
-    map((contentRect) =>
+    combineLatestWith(options$),
+    map(([contentRect, options]) =>
       computeChartDimensions({
         contentRect,
         height: options.height,
@@ -39,11 +58,8 @@ export const useChartDimensions = <T extends Element>(
 
   const dimensions = fromRx(
     dimensions$,
-    computeChartDimensions({
-      height: options.height,
-      margin: options.margin,
-      width: options.width,
-    })
+    // eslint-disable-next-line solid/reactivity
+    computeChartDimensions(optionsAccessor())
   );
 
   return [setRef, dimensions, dimensions$];

@@ -20,6 +20,7 @@ type UseScaleOptions<
     array: Iterable<Datum>
   ) => DatumOutput;
   data: Datum[] | Accessor<Datum[]>;
+  nice?: boolean | Accessor<boolean>;
   range?: Iterable<Range> | Accessor<Iterable<Range>>;
   type?: ScaleType | Accessor<ScaleType>;
 };
@@ -45,6 +46,8 @@ export const useScale = <
     const accessor = options.accessor;
     const data =
       typeof options.data === 'function' ? options.data() : options.data;
+    const nice =
+      typeof options.nice === 'function' ? options.nice() : options.nice;
     const range =
       typeof options.range === 'function' ? options.range() : options.range;
     const type =
@@ -73,6 +76,10 @@ export const useScale = <
 
     if (range) {
       scale.range(range);
+    }
+
+    if (nice) {
+      scale.nice();
     }
 
     return scale;

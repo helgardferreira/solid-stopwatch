@@ -21,6 +21,8 @@ type AxisHorizontalProps<
   scale: Scale;
 };
 
+// TODO: make tick, label, and line styling configurable (maybe through cva variants?)
+// TODO: make number of ticks configurable
 export function AxisHorizontal<
   Range,
   Output,

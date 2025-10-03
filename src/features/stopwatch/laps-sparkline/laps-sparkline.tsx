@@ -8,9 +8,10 @@ import { splitFormat, useLinePath, useScale } from '../utils';
 
 import { useSparklineMargin } from './use-sparkline-margin';
 
-export const Sparkline: Component = () => {
-  const splitFormatter = splitFormat({ short: true });
+export const LapsSparkline: Component = () => {
   const { laps } = useStopwatch();
+
+  const splitFormatter = splitFormat({ short: true });
   const xAccessor = (d: Lap): number => d.lapNumber;
   const yAccessor = (d: Lap): number => d.split;
 
@@ -25,6 +26,7 @@ export const Sparkline: Component = () => {
   const yScale = useScale({
     accessor: yAccessor,
     data: laps,
+    nice: true,
     range: () => [dimensions().boundedHeight, 0],
   });
   const linePath = useLinePath({

@@ -47,8 +47,8 @@ export function AxisVertical<
       <For each={ticks()}>
         {(tick) => (
           <text
-            class="text-xs transition-all duration-300 ease-out"
-            dominant-baseline="middle"
+            class="font-mono text-xs transition-all duration-300 ease-out"
+            dominant-baseline="central"
             text-anchor="end"
             transform={`translate(-8, ${local.scale(tick)})`}
           >
@@ -59,9 +59,10 @@ export function AxisVertical<
 
       <Show when={local.label}>
         <text
-          class="text-sm"
+          class="text-sm font-medium"
           text-anchor="middle"
-          transform={`translate(${-local.dimensions.margin.left / 2 - 6}, ${
+          dominant-baseline="central"
+          transform={`translate(${-local.dimensions.margin.left + 12}, ${
             local.dimensions.boundedHeight / 2
           }) rotate(-90)`}
         >

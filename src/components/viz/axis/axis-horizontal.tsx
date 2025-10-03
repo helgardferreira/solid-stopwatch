@@ -51,7 +51,7 @@ export function AxisHorizontal<
       <For each={ticks()}>
         {(tick) => (
           <text
-            class="text-xs transition-all duration-300 ease-out"
+            class="font-mono text-xs transition-all duration-300 ease-out"
             text-anchor="middle"
             transform={`translate(${local.scale(tick)}, 16)`}
           >
@@ -62,9 +62,10 @@ export function AxisHorizontal<
 
       <Show when={local.label}>
         <text
-          class="text-sm"
+          class="text-sm font-medium"
+          dominant-baseline="central"
           text-anchor="middle"
-          transform={`translate(${local.dimensions.boundedWidth / 2}, ${local.dimensions.margin.bottom / 2 + 12})`}
+          transform={`translate(${local.dimensions.boundedWidth / 2}, ${local.dimensions.margin.bottom - 12})`}
         >
           {local.label}
         </text>

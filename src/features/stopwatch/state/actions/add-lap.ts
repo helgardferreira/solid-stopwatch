@@ -16,6 +16,7 @@ export const addLap = stopwatchMachineSetup.assign(({ context }) => {
       isSlowest: false,
       lapNumber,
       split: currentSplit,
+      timestamp: new Date(),
       total,
     },
     ...laps,

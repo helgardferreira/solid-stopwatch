@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { AccessDeep, DeepAccessor } from '../../types';
 
-// TODO: document this
-export function accessDeep<T, U extends DeepAccessor<T>>(
+export const accessDeep = <T, U extends DeepAccessor<T>>(
   deepAccessor: U
-): AccessDeep<U> {
+): AccessDeep<U> => {
   if (
     typeof deepAccessor !== 'object' ||
     deepAccessor instanceof Date ||
@@ -39,4 +38,4 @@ export function accessDeep<T, U extends DeepAccessor<T>>(
   }
 
   return accessedRecord as unknown as AccessDeep<U>;
-}
+};

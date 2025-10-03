@@ -27,7 +27,6 @@ type UseContentResizeResult<T extends Element> = [
   contentRect$: Observable<DOMRectReadOnly>,
 ];
 
-// TODO: document this
 export const useContentResize = <T extends Element>(
   options: UseContentResizeResultOptions = {}
 ): UseContentResizeResult<T> => {

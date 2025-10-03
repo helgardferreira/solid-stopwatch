@@ -33,7 +33,6 @@ type UseChartDimensionsResult<T extends Element> = [
   contentRect$: Observable<ChartDimensions>,
 ];
 
-// TODO: document this
 export const useChartDimensions = <T extends Element>(
   options: UseChartDimensionsOptions = {}
 ): UseChartDimensionsResult<T> => {

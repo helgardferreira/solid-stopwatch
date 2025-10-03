@@ -7,7 +7,6 @@ type ComputeChartDimensionsOptions = {
   width?: number;
 };
 
-// TODO: document this
 export const computeChartDimensions = (
   options: ComputeChartDimensionsOptions = {}
 ): ChartDimensions => {

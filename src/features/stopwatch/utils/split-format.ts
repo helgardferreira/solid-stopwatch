@@ -1,4 +1,12 @@
-export const splitFormat = (locales: string | readonly string[] = 'en') => {
+type SplitFormatOptions = {
+  short?: boolean;
+  locales?: string | readonly string[];
+};
+
+export const splitFormat = ({
+  short = false,
+  locales = 'en',
+}: SplitFormatOptions = {}) => {
   const millisecondsFormatter = new Intl.NumberFormat(locales, {
     minimumIntegerDigits: 3,
   });
@@ -12,9 +20,23 @@ export const splitFormat = (locales: string | readonly string[] = 'en') => {
     const minutes = Math.floor(splitMs / (1_000 * 60)) % 60;
     const hours = Math.floor(splitMs / (1_000 * 60 * 60)) % 24;
 
-    return `${smhFormatter.format(hours)}:${smhFormatter.format(
-      minutes
-    )}:${smhFormatter.format(seconds)}.${millisecondsFormatter.format(
+    if (short === false || hours !== 0) {
+      return `${smhFormatter.format(hours)}:${smhFormatter.format(
+        minutes
+      )}:${smhFormatter.format(seconds)}.${millisecondsFormatter.format(
+        milliseconds
+      )}`;
+    }
+
+    if (minutes !== 0) {
+      return `${smhFormatter.format(
+        minutes
+      )}:${smhFormatter.format(seconds)}.${millisecondsFormatter.format(
+        milliseconds
+      )}`;
+    }
+
+    return `${smhFormatter.format(seconds)}.${millisecondsFormatter.format(
       milliseconds
     )}`;
   };

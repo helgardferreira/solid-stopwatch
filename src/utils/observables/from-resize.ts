@@ -5,7 +5,6 @@ export type ResizeObservable = Observable<{
   observer: ResizeObserver;
 }>;
 
-// TODO: document this
 export const fromResize = (
   target: Element,
   options?: ResizeObserverOptions

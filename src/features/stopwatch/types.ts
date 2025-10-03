@@ -3,5 +3,6 @@ export type Lap = {
   isSlowest?: boolean;
   lapNumber: number;
   split: number;
+  timestamp?: Date;
   total: number;
 };

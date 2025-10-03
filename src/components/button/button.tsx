@@ -27,7 +27,7 @@ export const buttonVariants = cva(
     'rounded-full',
     'shrink-0',
     'text-sm',
-    'transition-all',
+    'transition-colors',
     'whitespace-nowrap'
   ),
   {
